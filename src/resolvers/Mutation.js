@@ -49,7 +49,7 @@ const Mutation =  {
         if (emailTaken) {
           throw new Error('email taken!')
         }
-        user.email = data.email;
+        user.email = args.data.email;
       }
 
       if(typeof args.data.name === 'string') {
@@ -86,16 +86,38 @@ const Mutation =  {
       return deleted[0];
     },
 
+    updatePost: (parent, args, { db }, info) => {
+      const {id, data } = args;
+      const post = db.posts.find((post) => post.id === id);
+
+      if(!post) {
+        throw new Error('cannot find post');
+      }
+      //title, body, published
+      if(typeof data.title === 'string') {
+        post.title = data.title;
+      }
+
+      if(typeof data.body === 'string') {
+        post.body = data.body;
+      }
+
+      if(typeof data.published === 'boolean') {
+        post.published = data.published;
+      }
+      return post;
+    },
+
     createComment: (parent, args, { db }, info) => {
       const { users, posts, comments } = db;
       const userExists = users.some((user) => user.id === args.data.author);
       const postExists = posts.some((post) => post.id === args.data.post);
 
       if (!userExists) {
-        throw new Error('user not found!');
+        throw new Error('User not found!');
       }
       if (!postExists) {
-        throw new Error('post not found!');
+        throw new Error('Post not found!');
       }
       const comment = {
         id: uuidv4(),
@@ -111,12 +133,24 @@ const Mutation =  {
       );
 
       if (commentIndex === -1) {
-        throw new Error('comment not found');
+        throw new Error('Comment not found');
       }
       const deleted = db.comments[commentIndex];
       db.comments = db.comments.filter((comment) => comment.id !== args.id);
       return deleted;
     },
+    updateComment: (parent, args, { db }, info) => {
+      const { id, data } = args;
+      const comment = db.comments.find(comm => comm.id === id);
+
+      if(!comment) {
+        throw new Error('Cannot find comment')
+      }
+      if(typeof data.text === 'string') {
+        comment.text = data.text;
+      }
+      return comment;
+    }
   }
 
   export default Mutation;

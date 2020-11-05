@@ -21,7 +21,7 @@ const server = new GraphQLServer({
     db
   }
 })
-
+//localhost 4000
 server.start(() => {
   console.log('the server is up')
 })
