@@ -6,6 +6,11 @@ type Query {
   post: Post!
 }
 
+type Subscription {
+  comment(postId: ID!): Comment!
+  post: Post!
+}
+
 type Mutation {
   createUser(data: CreateUserInput): User!
   deleteUser(id: ID!): User!
