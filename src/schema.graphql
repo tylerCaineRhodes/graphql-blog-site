@@ -8,7 +8,7 @@ type Query {
 
 type Subscription {
   comment(postId: ID!): Comment!
-  post: Post!
+  post: PostSubscriptionPayload!
 }
 
 type Mutation {
@@ -81,4 +81,9 @@ type Post {
   published: Boolean!
   author: User!
   comments: [Comment!]!
+}
+
+type PostSubscriptionPayload {
+  mutation: String!
+  data: Post!
 }

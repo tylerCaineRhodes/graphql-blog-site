@@ -74,12 +74,17 @@ const Mutation =  {
       };
       db.posts.push(post);
       if(args.data.published) {
-        pubsub.publish('post', { post })
+        pubsub.publish('post', { 
+          post: {
+            mutation: 'CREATED',
+            data: post
+          } 
+        })
       }
       return post;
     },
 
-    deletePost: (parent, args, { db }, info) => {
+    deletePost: (parent, args, { db, pubsub }, info) => {
       const postIndex = db.posts.findIndex((post) => post.id === args.id);
 
       if (postIndex === -1) {
@@ -87,12 +92,22 @@ const Mutation =  {
       }
       const deleted = db.posts.splice(postIndex, 1);
       db.comments = db.comments.filter((comment) => comment.post !== args.id);
+
+      if(deleted[0].published) {
+        pubsub.publish('post', {
+          post: {
+            mutation:'DELETED',
+            data: deleted[0]
+          }
+        })
+      }
       return deleted[0];
     },
 
-    updatePost: (parent, args, { db }, info) => {
+    updatePost: (parent, args, { db, pubsub }, info) => {
       const {id, data } = args;
       const post = db.posts.find((post) => post.id === id);
+      const originalPost = { ...post };
 
       if(!post) {
         throw new Error('cannot find post');
@@ -108,6 +123,32 @@ const Mutation =  {
 
       if(typeof data.published === 'boolean') {
         post.published = data.published;
+
+        if(originalPost.pushlished && !post.published) {
+          //fire deleted event
+          pubsub.publish('post', {
+            post: {
+              mutation: 'DELETED',
+              data: originalPost
+            }
+          })
+        } else if (!originalPost.published && post.published) {
+          //fire created event
+          pubsub.publish('post', {
+            post: {
+              mutation: 'CREATED',
+              data: post
+            }
+          })
+        }
+      } else if (post.published) {
+        //fire updated event
+        pubsub.publish('post', {
+          post: {
+            mutation: 'UPDATED', 
+            data: post
+          }
+        })
       }
       return post;
     },
@@ -146,6 +187,7 @@ const Mutation =  {
       db.comments = db.comments.filter((comment) => comment.id !== args.id);
       return deleted;
     },
+    
     updateComment: (parent, args, { db }, info) => {
       const { id, data } = args;
       const comment = db.comments.find(comm => comm.id === id);
