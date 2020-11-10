@@ -39,7 +39,7 @@ const Query = {
   },
 
   comments: (parent, args, ctx, info) => {
-    return ctx.comments;
+    return ctx.db.comments;
   },
 };
 
